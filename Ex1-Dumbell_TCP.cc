@@ -17,16 +17,21 @@ int main() {
     //Config::SetDefault("ns3::TcpL4Protocol::SocketType", TypeIdValue(TypeId::LookupByName("ns3::TcpNewReno")));
 
     // - Configura TCP padrão como Cubic
-    Config::SetDefault("ns3::TcpL4Protocol::SocketType", TypeIdValue(TypeId::LookupByName("ns3::TcpCubic")));
-    
+    std::string tcp_type = "ns3::TcpCubic";
+    Config::SetDefault("ns3::TcpL4Protocol::SocketType", TypeIdValue(TypeId::LookupByName(tcp_type)));
+    std::cout << "[INFO] Configuração do TCP ajustado para " << tcp_type << std::endl;
+
     // Limita janela TCP (5Mbps):
     // 40ms + 20ms + 40ms (atrasos) = 100ms por OWD (One-Way Delay), 200ms por RTT
     // Portanto, se o limite é 5Mbits/s então, 1Mbits/200ms, ou seja, 125000 bytes
-    Config::SetDefault("ns3::TcpSocket::SndBufSize", UintegerValue(125000));
-    Config::SetDefault("ns3::TcpSocket::RcvBufSize", UintegerValue(125000));
+    uint32_t tcp_limit = 125000;
+    Config::SetDefault("ns3::TcpSocket::SndBufSize", UintegerValue(tcp_limit));
+    Config::SetDefault("ns3::TcpSocket::RcvBufSize", UintegerValue(tcp_limit));
+    std::cout << "[INFO] Banda do TCP ajustado para " << tcp_limit << " bytes ~ " << tcp_limit/25000 << " Mbps"<< std::endl;
 
     // Tempo de simulação:
     float tempo_final = 10.0;
+    std::cout << "[INFO] Duração da simulação: " << tempo_final << " segundos." << std::endl;
 
     // Quantidade de emissores e receptores:
     uint32_t n_emissores = 2;
@@ -41,13 +46,15 @@ int main() {
     emissores_nodes.Create(n_emissores);
     receptores_nodes.Create(n_receptores);
     roteadores_nodes.Create(n_roteadores);
+    std::cout << "[INFO] " << n_emissores << " emissores, " << n_receptores << " receptores e " << n_roteadores << " roteadores criados com sucesso." << std::endl;
 
-
-    /* Cria conecções entre dispositivos */
+    /* Cria conexões entre dispositivos */
     // Roteadores:
     // - Conexão (Cria placas de rede e canal)
+    std::string broadband_limit = "10Mbps";
+
     PointToPointHelper conexao_roteadores;
-    conexao_roteadores.SetDeviceAttribute("DataRate", StringValue("10Mbps"));
+    conexao_roteadores.SetDeviceAttribute("DataRate", StringValue(broadband_limit));
     conexao_roteadores.SetChannelAttribute("Delay", StringValue("20ms"));
 
     // Cria o link (liga as placas de rede e o canal aos dispositivos)
@@ -57,7 +64,7 @@ int main() {
     // Emissores e receptores:
     // - Cria conexão dos emissores e receptores
     PointToPointHelper conexao_em_rec;
-    conexao_em_rec.SetDeviceAttribute("DataRate", StringValue("10Mbps"));
+    conexao_em_rec.SetDeviceAttribute("DataRate", StringValue(broadband_limit));
     conexao_em_rec.SetChannelAttribute("Delay", StringValue("40ms"));
 
     // - Faz o link do emissores com o roteador 1
@@ -106,6 +113,7 @@ int main() {
     // Faz roteamento automaticamente:
     Ipv4GlobalRoutingHelper::PopulateRoutingTables();
 
+    std::cout << "[INFO] Rede criada com sucesso." << std::endl;
 
     /* UDP */
     // Porta UDP:
@@ -125,12 +133,14 @@ int main() {
         "ns3::UdpSocketFactory",
         Address(InetSocketAddress(receptores_interfaces[1].GetAddress(1), porta_udp))
     );
-    udp_background.SetAttribute("DataRate", StringValue("8Mbps"));
+    std::string udp_limit_string = "8Mbps";
+    udp_background.SetAttribute("DataRate", StringValue(udp_limit_string));
     udp_background.SetAttribute("PacketSize", UintegerValue(1024));
     ApplicationContainer app_udp_emissor = udp_background.Install(emissores_nodes.Get(1));
     app_udp_emissor.Start(Seconds(0.0));
     app_udp_emissor.Stop(Seconds(tempo_final));
 
+    std::cout << "[INFO] Tráfego UDP de " << udp_limit_string << " criado com sucesso." << std::endl;
 
     /* TCP */
     // Porta TCP:
@@ -155,9 +165,11 @@ int main() {
     app_tcp_emissor.Start(Seconds(0.0));
     app_tcp_emissor.Stop(Seconds(tempo_final));
 
+    std::cout << "[INFO] Tráfego TCP " << tcp_type << " criado com sucesso." << std::endl;
 
     /* Rodar simulação */
     Simulator::Stop(Seconds(tempo_final));
     Simulator::Run();
+    std::cout << "[INFO] SIMULAÇÃO INICIADA!" << std::endl;
     Simulator::Destroy();
 }
