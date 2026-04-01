@@ -62,7 +62,7 @@ int main() {
 
     // - Faz o link do emissores com o roteador 1
     std::vector<NetDeviceContainer> link_emissores;
-    for (uint32_t i = 0; i < n_emissores; i++){
+    for (uint32_t i = 0; i < n_emissores; i++) {
         link_emissores.push_back(conexao_em_rec.Install(emissores_nodes.Get(i), roteadores_nodes.Get(0)));
     }
 
