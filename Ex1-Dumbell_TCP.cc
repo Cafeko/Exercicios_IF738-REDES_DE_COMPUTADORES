@@ -20,6 +20,8 @@ int main() {
     Config::SetDefault("ns3::TcpL4Protocol::SocketType", TypeIdValue(TypeId::LookupByName("ns3::TcpCubic")));
     
     // Limita janela TCP (5Mbps):
+    // 40ms + 20ms + 40ms (atrasos) = 100ms por OWD (One-Way Delay), 200ms por RTT
+    // Portanto, se o limite é 5Mbits/s então, 1Mbits/200ms, ou seja, 125000 bytes
     Config::SetDefault("ns3::TcpSocket::SndBufSize", UintegerValue(125000));
     Config::SetDefault("ns3::TcpSocket::RcvBufSize", UintegerValue(125000));
 
