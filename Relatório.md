@@ -47,9 +47,13 @@ A Janela de Congestionamento determina a quantidade de dados que o transmissor p
 
 Abaixo estão os gráficos gerados a partir dos arquivos brutos [dados_cwnd_NewReno.txt](./dados_cwnd_NewReno.txt) e [dados_cwnd_Cubic.txt](./dados_cwnd_Cubic.txt).
 
-| TCP NewReno (Sawtooth Clássico) | TCP Cubic (Crescimento Cúbico) |
-| :---: | :---: |
-| ![Gráfico CWND NewReno](grafico_janela_NewReno.png) | ![Gráfico CWND Cubic](grafico_janela_Cubic.png) |
+| TCP NewReno (Sawtooth Clássico) |
+| :---: |
+| ![Gráfico CWND NewReno](grafico_janela_NewReno.png) |
+
+| TCP Cubic (Crescimento Cúbico) |
+| :---: |
+| ![Gráfico CWND Cubic](grafico_janela_Cubic.png) |
 
 ### 3.2 Comentários e Diferenças nos Resultados
 
@@ -75,9 +79,13 @@ A Vazão (Throughput) é o resultado prático: quantos dados úteis chegaram ao 
 
 Abaixo estão os gráficos gerados a partir dos arquivos brutos [dados_vazao_NewReno.txt](./dados_vazao_NewReno.txt) e [dados_vazao_Cubic.txt](./dados_vazao_Cubic.txt).
 
-| TCP NewReno | TCP Cubic |
-| :---: | :---: |
-| ![Gráfico Vazão NewReno](grafico_vazao_NewReno.png) | ![Gráfico Vazão Cubic](grafico_vazao_Cubic.png) |
+| TCP NewReno |
+| :---: |
+| ![Gráfico Vazão NewReno](grafico_vazao_NewReno.png) |
+
+| TCP Cubic |
+| :---: |
+| ![Gráfico Vazão Cubic](grafico_vazao_Cubic.png) |
 
 ### 4.2 Comentários e Diferenças nos Resultados
 
