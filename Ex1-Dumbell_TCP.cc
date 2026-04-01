@@ -5,10 +5,43 @@
 #include "ns3/packet-sink-helper.h"
 #include "ns3/on-off-helper.h"
 #include "ns3/applications-module.h"
+#include "ns3/netanim-module.h"
+#include "ns3/mobility-module.h"
 
 
 using namespace ns3;
 
+// Cubic ou NewReno
+std::string tcp_type = "Cubic";
+// Arquivo simples para exportar os dados
+std::ofstream cwnd_file("dados_cwnd_" + tcp_type + ".txt");
+std::ofstream transfer_file("dados_vazao_" + tcp_type + ".txt");
+uint64_t lastTotalRx = 0;
+
+// Função que calcula a vazão a cada 0.1s
+void CheckThroughput(Ptr<PacketSink> sink) {
+    double now = Simulator::Now().GetSeconds();
+    uint64_t totalRx = sink->GetTotalRx(); // Total de bytes recebidos até agora
+    
+    // Calcula quantos Mb chegaram nos últimos 0.1s e converte para Mbps
+    double Mbps = (totalRx - lastTotalRx) * 8.0 / 1e6 / 0.1;
+    
+    transfer_file << now << " " << Mbps << std::endl;
+    lastTotalRx = totalRx;
+    
+    // Agenda a próxima medição para daqui a 0.1s
+    Simulator::Schedule(Seconds(0.1), &CheckThroughput, sink);
+}
+
+// Função simples: toda vez que a janela mudar, escreve "tempo valor" no arquivo
+void RegistraCwnd(uint32_t oldVal, uint32_t newVal) {
+    cwnd_file << Simulator::Now().GetSeconds() << " " << newVal << std::endl;
+}
+
+// Essa função evita o erro fatal: ela só conecta o rastreador após o TCP começar
+void ConectarTrace() {
+    Config::ConnectWithoutContext("/NodeList/0/$ns3::TcpL4Protocol/SocketList/0/CongestionWindow", MakeCallback(&RegistraCwnd));
+}
 
 int main() {
     /* Preparação */
@@ -16,9 +49,8 @@ int main() {
     // - Configura TCP padrão como Reno
     //Config::SetDefault("ns3::TcpL4Protocol::SocketType", TypeIdValue(TypeId::LookupByName("ns3::TcpNewReno")));
 
-    // - Configura TCP padrão como Cubic
-    std::string tcp_type = "ns3::TcpCubic";
-    Config::SetDefault("ns3::TcpL4Protocol::SocketType", TypeIdValue(TypeId::LookupByName(tcp_type)));
+    // - Configura TCP padrão como Cubic ou NewReno
+    Config::SetDefault("ns3::TcpL4Protocol::SocketType", TypeIdValue(TypeId::LookupByName("ns3::Tcp" + tcp_type)));
     std::cout << "[INFO] Configuração do TCP ajustado para " << tcp_type << std::endl;
 
     // Limita janela TCP (5Mbps):
@@ -30,7 +62,7 @@ int main() {
     std::cout << "[INFO] Banda do TCP ajustado para " << tcp_limit << " bytes ~ " << tcp_limit/25000 << " Mbps"<< std::endl;
 
     // Tempo de simulação:
-    float tempo_final = 10.0;
+    float tempo_final = 200.0;
     std::cout << "[INFO] Duração da simulação: " << tempo_final << " segundos." << std::endl;
 
     // Quantidade de emissores e receptores:
@@ -162,14 +194,45 @@ int main() {
     );
     tcp_client.SetAttribute("MaxBytes", UintegerValue(0));
     ApplicationContainer app_tcp_emissor = tcp_client.Install(emissores_nodes.Get(0));
-    app_tcp_emissor.Start(Seconds(0.0));
+    app_tcp_emissor.Start(Seconds(0.5));
     app_tcp_emissor.Stop(Seconds(tempo_final));
 
     std::cout << "[INFO] Tráfego TCP " << tcp_type << " criado com sucesso." << std::endl;
 
-    /* Rodar simulação */
+    // Mobilidade para o NetAnim
+    MobilityHelper mobility;
+    mobility.SetMobilityModel("ns3::ConstantPositionMobilityModel");
+    mobility.InstallAll();
+
+    Simulator::Schedule(Seconds(0.6), &ConectarTrace);
+    Ptr<PacketSink> sink1 = DynamicCast<PacketSink>(app_tcp_receptor.Get(0));
+    Simulator::Schedule(Seconds(0.1), &CheckThroughput, sink1);
+
+    // NetAnim
+    AnimationInterface anim("dumbbell_animation.xml");
+    anim.SetMaxPktsPerTraceFile(2000000);
+    // Posições para os Emissores (Lado Esquerdo)
+    anim.SetConstantPosition(emissores_nodes.Get(0), 10, 20); // S1
+    anim.SetConstantPosition(emissores_nodes.Get(1), 10, 40); // S2
+
+    // Posições para os Roteadores (Centro)
+    anim.SetConstantPosition(roteadores_nodes.Get(0), 40, 30); // R1
+    anim.SetConstantPosition(roteadores_nodes.Get(1), 60, 30); // R2
+
+    // Posições para os Receptores (Lado Direito)
+    anim.SetConstantPosition(receptores_nodes.Get(0), 90, 20); // D1
+    anim.SetConstantPosition(receptores_nodes.Get(1), 90, 40); // D2
+    
+    // Rodar simulação
     Simulator::Stop(Seconds(tempo_final));
+    std::cout << "[INFO] SIMULAÇÃO INICIADA..." << std::endl;
     Simulator::Run();
-    std::cout << "[INFO] SIMULAÇÃO INICIADA!" << std::endl;
+    std::cout << "[INFO] Simulação concluída com sucesso!" << std::endl;
+
+    cwnd_file.close();
+    transfer_file.close();
+
     Simulator::Destroy();
+
+    return 0;
 }
