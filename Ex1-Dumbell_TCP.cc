@@ -29,7 +29,7 @@ int main() {
     // Quantidade de emissores e receptores:
     uint32_t n_emissores = 2;
     uint32_t n_receptores = 2;
-
+    uint32_t n_roteadores = 2;
 
     /* Cria dispositivos da rede: emissores, receptores e roteadores */
     NodeContainer emissores_nodes;
@@ -38,7 +38,7 @@ int main() {
 
     emissores_nodes.Create(n_emissores);
     receptores_nodes.Create(n_receptores);
-    roteadores_nodes.Create(2);
+    roteadores_nodes.Create(n_roteadores);
 
 
     /* Cria conecções entre dispositivos */
