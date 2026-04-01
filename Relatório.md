@@ -20,16 +20,18 @@ Para a realização dos testes, foi utilizada uma topologia *Dumbbell* (haltere)
 
 ### 2.1 Configuração da Topologia
 ![Topologia do cenário](./topologia.png)
-A rede foi montada com os seguintes parâmetros:  
+A rede foi montada com os seguintes parâmetros:
+
 * **Links de Acesso ($S_n$ para $R_1$ / $R_2$ para $D_n$):** Banda de **10 Mbps** e atraso de **40 ms**.  
 * **Link Gargalo ($R_1$ para $R_2$):** Banda de **10 Mbps** e atraso de **20 ms**.  
 * **RTT Total:** $\approx (40 + 20 + 40) \times 2 = \mathbf{200 \text{ ms}}$.  
 * **Buffer do Gargalo:** Limitado para forçar perdas de pacotes quando a banda exceder 10 Mbps.
 
 ### 2.2 Cenário de Tráfego
-A simulação teve duração de 10 segundos:
-1.  **Fluxo Compunsor (UDP):** Iniciado no tempo `0.0s`, enviando tráfego constante de **8 Mbps** de $S_2$ para $D_2$. Este tráfego não reduz a velocidade em caso de congestionamento.
-2.  **Fluxo de Teste (TCP):** Iniciado no tempo `0.5s` (para garantir que a rede já esteja congestionada), transferindo um arquivo grande de $S_1$ para $D_1$.
+A simulação teve duração de 200 segundos com os seguintes fluxos de dados:
+
+1. **Fluxo Congestionante (UDP):** Iniciado no tempo `0.0s`, enviando tráfego constante de **8 Mbps** de $S_2$ para $D_2$. Este tráfego não reduz a velocidade em caso de congestionamento.  
+1. **Fluxo de Teste (TCP):** Iniciado no tempo `0.5s` (para garantir que a rede já esteja congestionada), transferindo um arquivo grande de $S_1$ para $D_1$.
 
 > **O Desafio:** O link central tem 10 Mbps totais. Como o UDP ocupa 8 Mbps fixos, restam apenas **2 Mbps** para o TCP lutar por eles.
 
@@ -87,17 +89,15 @@ Lembrando que a "banda livre" restante para o TCP era de aproximadamente **2 Mbp
 
 ### 4.3 Razões para o Desempenho da Vazão
 
-* **Velocidade de Recuperação:** A vazão é o "prato final", e o Cubic cozinha mais rápido. Após uma perda forçada pela saturação da fila (causada pelo UDP), o NewReno volta a crescer linearmente devagar. Enquanto o Reno está "andando", o Cubic está "correndo" de volta para os 2 Mbps utilizando sua curva côncava de crescimento.
+* **Velocidade de Recuperação:** Após uma perda forçada pela saturação da fila (causada pelo UDP), o NewReno volta a crescer linearmente devagar. Enquanto o Reno está "andando", o Cubic está "correndo" de volta para os 2 Mbps utilizando sua curva côncava de crescimento.
 * **Utilização do Link:** Devido ao seu crescimento cúbico, o Cubic passa mais tempo operando perto da capacidade máxima disponível do gargalo do que o Reno. Em um cenário com RTT de 200ms, o Reno falha em preencher os 2 Mbps restantes rapidamente após cada evento de descarte de pacote.
 
 ---
 
 ## 5. Conclusão e Discussão
 
-Este experimento prático no ns-3 demonstrou claramente as vantagens arquiteturais do **TCP Cubic** sobre o **TCP NewReno**, especialmente em cenários com RTT moderado/alto e forte concorrência com tráfego não-responsivo.
+Este experimento prático no ns-3 demonstrou as vantagens arquiteturais do **TCP Cubic** sobre o **TCP NewReno**, especialmente em cenários com RTT moderado/alto e forte concorrência com tráfego não-responsivo.
 
 ### Resumo Comparativo
 * **NewReno** é muito lento para recuperar a banda após perdas em redes com RTT alto, devido ao seu crescimento linear AIMD. Isso resulta em baixa vazão média e subutilização do link disponível.
 * **Cubic** resolve esse problema tornando o crescimento da janela independente do RTT e utilizando uma função cúbica que acelera a recuperação de banda. Isso resulta em uma vazão mais estável e uma melhor utilização dos recursos da rede.
-
-Em resposta às questões da atividade: o **Cubic** obteve um desempenho superior (maior vazão média e recuperação mais rápida da janela), validando o porquê de ter se tornado o algoritmo padrão na maioria dos sistemas operacionais modernos.
