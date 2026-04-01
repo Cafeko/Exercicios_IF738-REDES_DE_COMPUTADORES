@@ -114,7 +114,7 @@ int main() {
     // UDP receptor:
     PacketSinkHelper sink_udp(
         "ns3::UdpSocketFactory",
-        Address(InetSocketAddress(emissores_interfaces[1].GetAddress(0), porta_udp))
+        Address(InetSocketAddress(receptores_interfaces[1].GetAddress(1), porta_udp))
     );
     ApplicationContainer app_udp_receptor = sink_udp.Install(receptores_nodes.Get(1));
     app_udp_receptor.Start(Seconds(0.0));
@@ -139,7 +139,7 @@ int main() {
     // TCP Receptor:
     PacketSinkHelper tcp_server(
         "ns3::TcpSocketFactory",
-        Address(InetSocketAddress(emissores_interfaces[0].GetAddress(0), porta_tcp))
+        Address(InetSocketAddress(receptores_interfaces[0].GetAddress(1), porta_tcp))
     );
     ApplicationContainer app_tcp_receptor = tcp_server.Install(receptores_nodes.Get(0));
     app_tcp_receptor.Start(Seconds(0.0));
@@ -148,7 +148,7 @@ int main() {
     // TCP Emissor:
     BulkSendHelper tcp_client(
         "ns3::TcpSocketFactory",
-        Address(InetSocketAddress(receptores_interfaces[0].GetAddress(0), porta_tcp))
+        Address(InetSocketAddress(receptores_interfaces[0].GetAddress(1), porta_tcp))
     );
     tcp_client.SetAttribute("MaxBytes", UintegerValue(0));
     ApplicationContainer app_tcp_emissor = tcp_client.Install(emissores_nodes.Get(0));
