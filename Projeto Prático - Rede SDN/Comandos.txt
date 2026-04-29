@@ -1,0 +1,2 @@
+Rodar Mininet:
+sudo mn --custom topologia_mininet.py --topo Rede --controller=remote --link tc
