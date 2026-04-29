@@ -1,4 +1,0 @@
-Usar ryu em um virtual environment:
-
-source ryu-env38/bin/activate
-python -m ryu.cmd.manager
